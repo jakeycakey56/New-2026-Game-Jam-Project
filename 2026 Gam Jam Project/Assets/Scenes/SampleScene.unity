@@ -154,7 +154,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   PlayerCamera: {fileID: 330585545}
   MoveSpeed: 10
-  SampleDistance: 0.5
+  SampleDistance: 10
   GroundLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -292,7 +292,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &312984501
 Transform:
   m_ObjectHideFlags: 0

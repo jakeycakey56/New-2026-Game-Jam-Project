@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -26,7 +27,7 @@ public class PlayerMovement : MonoBehaviour
         {
             Ray ray = PlayerCamera.ScreenPointToRay(Input.mousePosition);
 
-            if (Physics.Raycast(ray, out RaycastHit hit, GroundLayer))
+            if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, GroundLayer))
             {
                 if (NavMesh.SamplePosition(hit.point, out NavMeshHit navMeshHit, SampleDistance, NavMesh.AllAreas))
                 {
