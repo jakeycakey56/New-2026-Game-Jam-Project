@@ -17,13 +17,11 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         PlayerAgent = GetComponent<NavMeshAgent>();
-
-
     }
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButton(0)) //Changed this to also allow click+hold movement
         {
             Ray ray = PlayerCamera.ScreenPointToRay(Input.mousePosition);
 
