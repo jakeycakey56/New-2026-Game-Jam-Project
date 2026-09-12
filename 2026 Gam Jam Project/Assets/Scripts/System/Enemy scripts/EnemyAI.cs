@@ -15,7 +15,13 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private float patrolRadius = 10f;
     [SerializeField] private float patrolWaitTime = 2f;
 
+    [Header("Grab Settings")]
+    [SerializeField] private float grabRange = 1.5f;
+
     private NavMeshAgent agent;
+
+    private PlayerStamina playerStamina;
+    private PlayerGrab playerGrab;
 
     private Vector3 lastKnownPosition; //using this to allow the enemies to "search"
     private float searchTimer; //And this will be how long they search for
@@ -23,23 +29,62 @@ public class EnemyAI : MonoBehaviour
 
     private enum EnemyState //these are the states available to an enemy in the script
     {
-        Idle,
         Chasing,
         Searching,
         Patrolling
     }
 
-    private EnemyState currentState = EnemyState.Idle; //enemies should start by doing nothing
+    private EnemyState currentState = EnemyState.Patrolling; //enemies should start by wandering around instead of standing still
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>(); //this SHOULD grab the NavMeshAgent attached to the Shadow Monster game object
     }
 
+    private void Start()
+    {
+        if (player != null)
+        {
+            playerStamina = player.GetComponent<PlayerStamina>();
+            playerGrab = player.GetComponent<PlayerGrab>();
+        }
+
+        patrolTimer = 0f; //allows the enemy to immediately choose its first patrol location
+    }
+
     private void Update()
     {
         if (player == null)
             return;
+
+        //check if the player is currently hiding
+        bool playerIsHiding =
+            playerStamina != null &&
+            playerStamina.IsHiding;
+
+        //check if the enemy is close enough to grab the player
+        //hidden players should NOT be able to be grabbed
+        if (!playerIsHiding)
+        {
+            float distanceToPlayer = Vector3.Distance(
+                transform.position,
+                player.position
+            );
+
+            if (distanceToPlayer <= grabRange)
+            {
+                //only grab if the player currently allows it
+                if (playerGrab != null && playerGrab.CanBeGrabbed)
+                {
+                    playerGrab.BeginGrab(gameObject);
+
+                    //stop moving while holding the player
+                    agent.ResetPath();
+
+                    return;
+                }
+            }
+        }
 
         //check if the player is both within detection range AND visible to the enemy
         if (CanSeePlayer())
@@ -55,10 +100,6 @@ public class EnemyAI : MonoBehaviour
 
         switch (currentState)
         {
-            case EnemyState.Idle:
-                agent.ResetPath();
-                break;
-
             case EnemyState.Chasing:
                 agent.SetDestination(player.position);
                 break;
@@ -75,6 +116,10 @@ public class EnemyAI : MonoBehaviour
 
     private bool CanSeePlayer() //checks both distance and whether something is blocking the enemy's view of the player
     {
+        //if the player is hiding, the enemy should treat them as invisible
+        if (playerStamina != null && playerStamina.IsHiding)
+            return false;
+
         //start the vision ray at roughly the enemy's eye level instead of its feet
         Vector3 eyePosition = transform.position + Vector3.up * eyeHeight;
 
