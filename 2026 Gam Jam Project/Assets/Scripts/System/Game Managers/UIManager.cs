@@ -6,11 +6,11 @@ public class UIManager : MonoBehaviour
 {
     public void LoadMainMenu()
     {
-        SceneManager.LoadScene("Main Menu");
+        SceneManager.LoadScene("MainMenu");
     }
 
     public void LoadMainGame()
     {
-        SceneManager.LoadScene("Main Game");
+        SceneManager.LoadScene("Game");
     }
 }
