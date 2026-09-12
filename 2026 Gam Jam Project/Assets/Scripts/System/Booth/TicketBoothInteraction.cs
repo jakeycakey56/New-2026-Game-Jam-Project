@@ -1,55 +1,59 @@
 using UnityEngine;
 
-public class TicketBoothInteraction : MonoBehaviour
+public class TollBoothInteraction : MonoBehaviour
 {
     private bool playerInRange = false;
-
-    private void Start()
-    {
-        Debug.Log("Ticket Booth Interaction script started.");
-    }
+    private bool isTalking = false;
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E))
+        // Start talking
+        if (playerInRange && Input.GetKeyDown(KeyCode.E) && !isTalking)
         {
-            Debug.Log("E key pressed.");
+            StartDialogue();
+        }
 
-            if (playerInRange)
-            {
-                Interact();
-            }
-            else
-            {
-                Debug.Log("E pressed, but player is NOT in range.");
-            }
+        // Temporary way to end dialogue
+        if (isTalking && Input.GetKeyDown(KeyCode.Space))
+        {
+            EndDialogue();
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Something entered the Ticket Booth trigger: " + other.name);
-
         if (other.CompareTag("Player"))
         {
             playerInRange = true;
-            Debug.Log("Player entered Ticket Booth interaction range.");
+            Debug.Log("Player entered toll booth interaction range.");
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        Debug.Log("Something exited the Ticket Booth trigger: " + other.name);
-
         if (other.CompareTag("Player"))
         {
             playerInRange = false;
-            Debug.Log("Player left Ticket Booth interaction range.");
+            Debug.Log("Player left toll booth interaction range.");
         }
     }
 
-    private void Interact()
+    private void StartDialogue()
     {
-        Debug.Log("INTERACTING WITH TICKET BOOTH!");
+        isTalking = true;
+
+        Debug.Log("Talking to toll booth NPC.");
+        Debug.Log("Game paused. Press Space to end dialogue.");
+
+        Time.timeScale = 0f;
+    }
+
+    private void EndDialogue()
+    {
+        isTalking = false;
+
+        Debug.Log("Dialogue ended.");
+
+        Time.timeScale = 1f;
     }
 }
