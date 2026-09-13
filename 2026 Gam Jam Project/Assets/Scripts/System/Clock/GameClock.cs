@@ -18,6 +18,9 @@ public class GameClock : MonoBehaviour
     private float timer;
     private int currentHour;
 
+    //Tracks how many full in-game hours have passed since the game started
+    private int hoursPassed = 0;
+
     //This is just a bool to check if the clock should freeze or not
     private bool isPaused = false;
 
@@ -27,6 +30,9 @@ public class GameClock : MonoBehaviour
 
     //Other scripts can check what time it currently is
     public int CurrentHour => currentHour;
+
+    //Other scripts can check how many full in-game hours have passed
+    public int HoursPassed => hoursPassed;
 
     //Same idea here, other scripts can check whether the clock is paused
     public bool IsPaused => isPaused;
@@ -59,6 +65,9 @@ public class GameClock : MonoBehaviour
     private void AdvanceHour()
     {
         currentHour++;
+
+        //Tracks how many hours have passed for difficulty scaling
+        hoursPassed++;
 
         //Wrap the clock from 12 back around to 1
         if (currentHour > 12)
