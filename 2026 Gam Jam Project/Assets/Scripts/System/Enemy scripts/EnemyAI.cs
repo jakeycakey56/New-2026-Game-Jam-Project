@@ -77,6 +77,7 @@ public class EnemyAI : MonoBehaviour
                 if (playerGrab != null && playerGrab.CanBeGrabbed)
                 {
                     playerGrab.BeginGrab(gameObject);
+                    AudioEvents.OnSFXRequested?.Invoke(SFXType.PlayerGrab);
 
                     //stop moving while holding the player
                     agent.ResetPath();
