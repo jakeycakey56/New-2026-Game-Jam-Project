@@ -26,6 +26,10 @@ public class HidingSpot : MonoBehaviour
         {
             if (!playerIsHiding)
             {
+                //Prevent the player from hiding while grabbed
+                if (playerGrab != null && playerGrab.IsGrabbed)
+                    return;
+
                 EnterHidingSpot();
             }
             else
