@@ -18,6 +18,10 @@ public class EnemyAI : MonoBehaviour
     [Header("Grab Settings")]
     [SerializeField] private float grabRange = 1.5f;
 
+    //keeps track of whether something like the IID is currently stunning the enemy
+    //keeping this here means EnemyAI stays in charge of its own movement
+    private bool isStunned = false;
+
     private NavMeshAgent agent;
 
     private PlayerStamina playerStamina;
@@ -55,6 +59,11 @@ public class EnemyAI : MonoBehaviour
     private void Update()
     {
         if (player == null)
+            return;
+
+        //if the IID or something else has stunned us, stop ALL normal enemy behavior
+        //this also keeps the enemy from grabbing the player while they're stunned
+        if (isStunned)
             return;
 
         //check if the player is currently hiding
@@ -111,6 +120,29 @@ public class EnemyAI : MonoBehaviour
             case EnemyState.Patrolling:
                 Patrol();
                 break;
+        }
+    }
+
+    //lets other systems, like the IID, tell this enemy when it should be stunned
+    public void SetStunned(bool stunned)
+    {
+        isStunned = stunned;
+
+        if (isStunned)
+        {
+            //stop whatever movement the enemy was doing when the stun happened
+            agent.ResetPath();
+            agent.isStopped = true;
+
+            Debug.Log("Enemy stunned!");
+        }
+        else
+        {
+            //give movement control back to the AI
+            //it'll continue using whatever state it was in before being stunned
+            agent.isStopped = false;
+
+            Debug.Log("Enemy recovered from stun!");
         }
     }
 
