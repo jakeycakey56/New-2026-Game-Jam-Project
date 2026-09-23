@@ -44,6 +44,24 @@ public class IIDController : MonoBehaviour
     //stuff like walls, buildings, trees, etc.
     [SerializeField] private LayerMask obstacleLayer;
 
+    [Header("IID Overload Settings")]
+
+    //keeping overload as its own InputAction so we can change the button later
+    public InputAction OverloadIID;
+
+    //anything this close gets completely fried by the explosion
+    [SerializeField] private float overloadKillRadius = 4f;
+
+    //anything inside this radius but outside the kill radius
+    //takes damage and gets stunned
+    [SerializeField] private float overloadBlastRadius = 8f;
+
+    //how much damage enemies outside the instant kill radius take
+    [SerializeField] private float overloadDamage = 50f;
+
+    //how long surviving enemies are stunned after the explosion
+    [SerializeField] private float overloadStunDuration = 5f;
+
     //grab the actual Unity light so our gameplay cone can match the visible flashlight
     private Light spotLight;
 
@@ -58,6 +76,9 @@ public class IIDController : MonoBehaviour
 
         //enable the reload input too
         ReloadIID.Enable();
+
+        //enable the overload input
+        OverloadIID.Enable();
 
         //grab the actual Spot Light from the flashlight object
         spotLight = FlashLight.GetComponentInChildren<Light>();
@@ -98,6 +119,13 @@ public class IIDController : MonoBehaviour
         if (ReloadIID.WasPressedThisFrame())
         {
             ReloadBattery();
+        }
+
+        //our emergency "OH CRAP" button
+        //this can still be used even if the loaded battery is completely dead
+        if (OverloadIID.WasPressedThisFrame())
+        {
+            Overload();
         }
     }
 
@@ -279,5 +307,88 @@ public class IIDController : MonoBehaviour
         }
 
         previouslyLitEnemies.Clear();
+    }
+
+    private void Overload()
+    {
+        //can't blow up an IID we don't actually own
+        if (!ownsIID)
+        {
+            Debug.Log("Player does not own an IID");
+            return;
+        }
+
+        Debug.Log("IID OVERLOAD!");
+
+        //shut the normal flashlight off first
+        //this also releases anything currently being held by the normal beam
+        if (FlashLightIsOn)
+        {
+            TurnOffFlashLight();
+        }
+
+        //find every enemy collider inside the full blast radius
+        Collider[] enemiesInBlast = Physics.OverlapSphere(
+            transform.position,
+            overloadBlastRadius,
+            enemyLayer
+        );
+
+        //some enemies may have multiple colliders
+        //this keeps us from accidentally hitting the same monster multiple times
+        HashSet<EnemyLightReaction> hitEnemies =
+            new HashSet<EnemyLightReaction>();
+
+        foreach (Collider enemyCollider in enemiesInBlast)
+        {
+            EnemyLightReaction enemy =
+                enemyCollider.GetComponentInParent<EnemyLightReaction>();
+
+            if (enemy == null || hitEnemies.Contains(enemy))
+                continue;
+
+            hitEnemies.Add(enemy);
+
+            //measure how close this enemy is to the player
+            float distanceToEnemy = Vector3.Distance(
+                transform.position,
+                enemy.transform.position
+            );
+
+            if (distanceToEnemy <= overloadKillRadius)
+            {
+                //anything this close gets completely fried
+                enemy.KillInstantly();
+            }
+            else
+            {
+                //anything farther out takes heavy damage
+                enemy.TakeLightDamage(overloadDamage);
+
+                //if the damage didn't kill them, keep them stunned
+                //long enough for the player to hopefully get the hell out of there
+                if (enemy != null)
+                {
+                    enemy.StunForSeconds(overloadStunDuration);
+                }
+            }
+        }
+
+        //using the overload destroys the IID itself
+        //IMPORTANT: spare batteries are intentionally left completely alone
+        ownsIID = false;
+
+        Debug.Log("IID destroyed!");
+    }
+
+    //draw the two explosion ranges in the Scene view
+    //this is just for us while balancing and does NOT show up during gameplay
+    private void OnDrawGizmosSelected()
+    {
+        //inner circle = instant death
+        Gizmos.DrawWireSphere(transform.position, overloadKillRadius);
+
+        //outer circle = damage + stun
+        Gizmos.DrawWireSphere(transform.position, overloadBlastRadius);
     }
 }
